@@ -167,3 +167,87 @@ Deleted surveys never appear in standard listings or submissions until restored.
 - Ensure cron/queue workers are configured if invitations will be queued (optional).
 - Set `APP_URL`, `FRONTEND_INVITE_PATH`, mail config, and DB credentials per environment.
 
+## Database Diagram
+
+```mermaid
+erDiagram
+    users {
+        bigIncrements id
+        string name
+        string email
+        string password
+        enum role
+        timestamps
+    }
+
+    surveys {
+        bigIncrements id
+        string title
+        text description
+        enum type
+        boolean is_active
+        boolean is_closed
+        uuid share_token
+        boolean is_public
+        timestamp expires_at
+        time available_from_time
+        time available_until_time
+        foreignId created_by
+        timestamps
+        softDeletes
+    }
+
+    questions {
+        bigIncrements id
+        foreignId survey_id
+        string question_text
+        enum type
+        boolean required
+        timestamps
+    }
+
+    question_options {
+        bigIncrements id
+        foreignId question_id
+        string option_text
+        timestamps
+    }
+
+    survey_invitations {
+        bigIncrements id
+        foreignId survey_id
+        string email
+        uuid invitation_token
+        enum status
+        timestamp expires_at
+        timestamps
+    }
+
+    survey_responses {
+        bigIncrements id
+        foreignId survey_id
+        foreignId respondent_id
+        timestamp submitted_at
+        timestamps
+    }
+
+    survey_answers {
+        bigIncrements id
+        foreignId response_id
+        foreignId question_id
+        text answer_text
+        foreignId selected_option_id
+        timestamps
+    }
+
+    users ||--o{ surveys : "creates"
+    surveys ||--o{ questions : "has"
+    questions ||--o{ question_options : "offers"
+    surveys ||--o{ survey_invitations : "sends"
+    surveys ||--o{ survey_responses : "receives"
+    users ||--o{ survey_responses : "submits"
+    survey_responses ||--o{ survey_answers : "includes"
+    survey_answers }o--|| questions : "answers"
+    survey_answers }o--|| question_options : " selects "
+    surveys ||--o{ question_options : ""
+```
