@@ -1,0 +1,48 @@
+================================================================
+Survey API – Key Endpoints
+================================================================
+
+Base URL: {{APP_URL}} (set via config/app.php → APP_URL)
+
+----------------------------------------------------------------
+Authentication
+----------------------------------------------------------------
+POST   /api/register                        Register new user (name, email, password, role)
+POST   /api/login                           Issue Sanctum token
+POST   /api/logout                          Revoke current token (auth required)
+GET    /api/me                              Current authenticated user profile
+
+----------------------------------------------------------------
+General (All Authenticated Users)
+----------------------------------------------------------------
+GET    /api/surveys                         Paginated surveys (behavior depends on role)
+        Query params:
+            type=poll|survey
+            status=active
+            search=keyword
+            page, per_page
+GET    /api/public/surveys/{share_token}    View public survey metadata
+GET    /api/public/invite/{invitation_token}View invite landing info (email + survey)
+
+----------------------------------------------------------------
+Respondent Actions
+----------------------------------------------------------------
+POST   /api/surveys/{survey}/submit         Submit answers (requires respondent role)
+        Body: invitation_token (optional), answers array
+
+----------------------------------------------------------------
+Creator/Admin Actions
+----------------------------------------------------------------
+POST   /api/surveys                         Create survey
+POST   /api/surveys/{survey}/share          Enable/disable public sharing
+POST   /api/surveys/{survey}/invite         Send email invitations
+POST   /api/surveys/{survey}/questions      Create question + options
+PATCH  /api/surveys/{survey}/close          Manually close survey
+PATCH  /api/surveys/{survey}/reopen         Reopen survey
+DELETE /api/surveys/{survey}                Soft delete survey
+
+----------------------------------------------------------------
+Admin-Only Actions
+----------------------------------------------------------------
+GET    /api/admin/surveys/deleted           List soft-deleted surveys (paginated)
+PATCH  /api/admin/surveys/{survey}/restore  Restore soft-deleted survey
