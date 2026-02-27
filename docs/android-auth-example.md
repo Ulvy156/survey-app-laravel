@@ -1,63 +1,143 @@
-# Android Kotlin Auth Example
+# Android Java Auth Example
 
-This example uses Retrofit and OkHttp to perform the `/api/login` call, persist the Sanctum token, and automatically apply the `Authorization: Bearer <token>` header to every authenticated request. Inject the base URL from Android build config (e.g., `BuildConfig.API_BASE_URL`) so it matches the backend `APP_URL`.
+This example uses Retrofit 2 and OkHttp to perform the `/api/login` call, persist the Sanctum token, and automatically append the `Authorization: Bearer <token>` header to every authenticated request. Inject the base URL from your build config (e.g., `BuildConfig.API_BASE_URL`) so it matches the backend `APP_URL`.
 
-```kotlin
-data class LoginRequest(val email: String, val password: String)
-data class LoginResponse(val success: Boolean, val message: String, val data: LoginPayload)
-data class LoginPayload(val user: UserDto, val token: String)
+```java
+import java.io.IOException;
 
-data class UserResponse(val success: Boolean, val data: UserPayload)
-data class UserPayload(val user: UserDto)
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.Header;
+import retrofit2.http.POST;
 
-data class UserDto(val id: Long, val name: String, val email: String, val role: String)
+public class LoginRequest {
+    public final String email;
+    public final String password;
 
-interface AuthApi {
+    public LoginRequest(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+}
+
+public class LoginResponse {
+    public boolean success;
+    public String message;
+    public LoginPayload data;
+}
+
+public class LoginPayload {
+    public UserDto user;
+    public String token;
+}
+
+public class UserResponse {
+    public boolean success;
+    public UserPayload data;
+}
+
+public class UserPayload {
+    public UserDto user;
+}
+
+public class UserDto {
+    public long id;
+    public String name;
+    public String email;
+    public String role;
+}
+
+public interface AuthApi {
     @POST("/api/login")
-    suspend fun login(@Body payload: LoginRequest): LoginResponse
+    Call<LoginResponse> login(@Body LoginRequest payload);
 
     @POST("/api/logout")
-    suspend fun logout(@Header("Authorization") bearer: String)
+    Call<Void> logout(@Header("Authorization") String bearer);
 
     @GET("/api/me")
-    suspend fun me(@Header("Authorization") bearer: String): UserResponse
+    Call<UserResponse> me(@Header("Authorization") String bearer);
 }
 
-interface TokenStore {
-    fun save(token: String)
-    fun read(): String?
-    fun clear()
+public interface TokenStore {
+    void save(String token);
+    String read();
+    void clear();
 }
 
-class AuthRepository(
-    private val api: AuthApi,
-    private val tokenStore: TokenStore
-) {
-    suspend fun login(email: String, password: String) {
-        val response = api.login(LoginRequest(email, password))
-        if (!response.success) error(response.message)
-        tokenStore.save(response.data.token)
+public class AuthRepository {
+    private final AuthApi api;
+    private final TokenStore tokenStore;
+
+    public AuthRepository(AuthApi api, TokenStore tokenStore) {
+        this.api = api;
+        this.tokenStore = tokenStore;
     }
 
-    suspend fun currentUser(): UserDto {
-        val token = tokenStore.read() ?: error("Missing token")
-        return api.me("Bearer $token").data.user
+    public void login(String email, String password) throws IOException {
+        Response<LoginResponse> response = api.login(new LoginRequest(email, password)).execute();
+        if (!response.isSuccessful() || response.body() == null || !response.body().success) {
+            throw new IllegalStateException(response.body() != null ? response.body().message : "Login failed");
+        }
+        tokenStore.save(response.body().data.token);
     }
 
-    suspend fun logout() {
-        val token = tokenStore.read() ?: return
-        api.logout("Bearer $token")
-        tokenStore.clear()
+    public UserDto currentUser() throws IOException {
+        String token = tokenStore.read();
+        if (token == null) throw new IllegalStateException("Missing token");
+        Response<UserResponse> response = api.me("Bearer " + token).execute();
+        if (!response.isSuccessful() || response.body() == null || response.body().data == null) {
+            throw new IllegalStateException("Unable to fetch profile");
+        }
+        return response.body().data.user;
+    }
+
+    public void logout() throws IOException {
+        String token = tokenStore.read();
+        if (token == null) return;
+        api.logout("Bearer " + token).execute();
+        tokenStore.clear();
     }
 }
 
-fun buildHttpClient(tokenStore: TokenStore) = OkHttpClient.Builder()
-    .addInterceptor { chain ->
-        val builder = chain.request().newBuilder()
-        tokenStore.read()?.let { builder.header("Authorization", "Bearer $it") }
-        chain.proceed(builder.build())
+public class AuthInterceptor implements Interceptor {
+    private final TokenStore tokenStore;
+
+    public AuthInterceptor(TokenStore tokenStore) {
+        this.tokenStore = tokenStore;
     }
-    .build()
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request original = chain.request();
+        Request.Builder builder = original.newBuilder();
+        String token = tokenStore.read();
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
+        }
+        return chain.proceed(builder.build());
+    }
+}
+
+public class RetrofitFactory {
+    public static Retrofit create(String baseUrl, TokenStore tokenStore) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(new AuthInterceptor(tokenStore))
+                .build();
+
+        return new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+    }
+}
 ```
 
-> `TokenStore` can wrap `EncryptedSharedPreferences`, `DataStore`, or another secure persistence layer on Android. Make sure to clear the token on logout so Sanctum sessions are revoked server-side and client-side.
+> `TokenStore` can wrap `EncryptedSharedPreferences`, `DataStore`, or any other secure persistence layer on Android. Always clear the token locally after calling `/api/logout` so server-side Sanctum tokens are revoked and clients don't retain stale credentials.

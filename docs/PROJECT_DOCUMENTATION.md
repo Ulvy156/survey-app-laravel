@@ -54,9 +54,9 @@ All protected routes use Sanctum tokens:
 | POST   | `/api/logout`   | Logout (auth required)           |
 | GET    | `/api/me`       | Current user profile             |
 
-### Android Kotlin Auth Example
+### Android Java Auth Example
 
-See `docs/android-auth-example.md` for a full Retrofit/OkHttp snippet that authenticates, stores tokens, and attaches the `Authorization: Bearer <token>` header automatically.
+See `docs/android-auth-example.md` for a full Retrofit/OkHttp snippet (Java) that authenticates, stores tokens, and attaches the `Authorization: Bearer <token>` header automatically.
 
 ## Surveys – Creator/Admin
 
