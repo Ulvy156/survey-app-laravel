@@ -172,16 +172,17 @@ Deleted surveys never appear in standard listings or submissions until restored.
 ```mermaid
 erDiagram
     users {
-        bigIncrements id
+        bigint id PK
         string name
         string email
         string password
         enum role
-        timestamps
+        datetime created_at
+        datetime updated_at
     }
 
     surveys {
-        bigIncrements id
+        bigint id PK
         string title
         text description
         enum type
@@ -189,55 +190,61 @@ erDiagram
         boolean is_closed
         uuid share_token
         boolean is_public
-        timestamp expires_at
+        datetime expires_at
         time available_from_time
         time available_until_time
-        foreignId created_by
-        timestamps
-        softDeletes
+        bigint created_by FK
+        datetime deleted_at
+        datetime created_at
+        datetime updated_at
     }
 
     questions {
-        bigIncrements id
-        foreignId survey_id
+        bigint id PK
+        bigint survey_id FK
         string question_text
         enum type
         boolean required
-        timestamps
+        datetime created_at
+        datetime updated_at
     }
 
     question_options {
-        bigIncrements id
-        foreignId question_id
+        bigint id PK
+        bigint question_id FK
         string option_text
-        timestamps
+        datetime created_at
+        datetime updated_at
     }
 
     survey_invitations {
-        bigIncrements id
-        foreignId survey_id
+        bigint id PK
+        bigint survey_id FK
         string email
         uuid invitation_token
         enum status
-        timestamp expires_at
-        timestamps
+        datetime expires_at
+        datetime created_at
+        datetime updated_at
     }
 
     survey_responses {
-        bigIncrements id
-        foreignId survey_id
-        foreignId respondent_id
-        timestamp submitted_at
-        timestamps
+        bigint id PK
+        bigint survey_id FK
+        bigint respondent_id FK
+        datetime submitted_at
+        datetime created_at
+        datetime updated_at
     }
 
     survey_answers {
-        bigIncrements id
-        foreignId response_id
-        foreignId question_id
+        bigint id PK
+        bigint response_id FK
+        bigint question_id FK
         text answer_text
-        foreignId selected_option_id
-        timestamps
+        bigint selected_option_id FK
+        datetime created_at
+        datetime updated_at
     }
 
     users ||--o{ surveys : "creates"
@@ -249,5 +256,4 @@ erDiagram
     survey_responses ||--o{ survey_answers : "includes"
     survey_answers }o--|| questions : "answers"
     survey_answers }o--|| question_options : " selects "
-    surveys ||--o{ question_options : ""
 ```
