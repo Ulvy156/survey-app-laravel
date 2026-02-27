@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net" modified="2026-02-27T10:20:00.000Z" agent="SurveyDocs/1.0" version="20.6.3">
+  <diagram id="survey-db-diagram" name="SurveyDB">
+    <mxGraphModel dx="1224" dy="703" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="users" value="users&#10;- id (PK)&#10;- name&#10;- email&#10;- password&#10;- role&#10;- timestamps" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="surveys" value="surveys&#10;- id (PK)&#10;- title&#10;- description&#10;- type&#10;- is_active&#10;- is_closed&#10;- share_token&#10;- is_public&#10;- expires_at&#10;- available_from_time&#10;- available_until_time&#10;- created_by (FK)&#10;- deleted_at&#10;- timestamps" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="320" y="40" width="260" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="questions" value="questions&#10;- id (PK)&#10;- survey_id (FK)&#10;- question_text&#10;- type&#10;- required&#10;- timestamps" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="640" y="40" width="220" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="question_options" value="question_options&#10;- id (PK)&#10;- question_id (FK)&#10;- option_text&#10;- timestamps" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="920" y="40" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="survey_invitations" value="survey_invitations&#10;- id (PK)&#10;- survey_id (FK)&#10;- email&#10;- invitation_token&#10;- status&#10;- expires_at&#10;- timestamps" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="240" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="survey_responses" value="survey_responses&#10;- id (PK)&#10;- survey_id (FK)&#10;- respondent_id (FK)&#10;- submitted_at&#10;- timestamps" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="320" y="300" width="240" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="survey_answers" value="survey_answers&#10;- id (PK)&#10;- response_id (FK)&#10;- question_id (FK)&#10;- answer_text&#10;- selected_option_id (FK)&#10;- timestamps" style="shape=rectangle;rounded=1;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#4d89f0;" vertex="1" parent="1">
+          <mxGeometry x="640" y="260" width="250" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_surveys" edge="1" parent="1" source="users" target="surveys" style="endArrow=ERone;startArrow=ERzero;strokeColor=#6c8ebf;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="surveys_questions" edge="1" parent="1" source="surveys" target="questions" style="endArrow=ERone;startArrow=ERzero;strokeColor=#d79b00;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="questions_options" edge="1" parent="1" source="questions" target="question_options" style="endArrow=ERone;startArrow=ERzero;strokeColor=#82b366;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="surveys_invitations" edge="1" parent="1" source="surveys" target="survey_invitations" style="endArrow=ERone;startArrow=ERzero;strokeColor=#ae7ec6;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="surveys_responses" edge="1" parent="1" source="surveys" target="survey_responses" style="endArrow=ERone;startArrow=ERzero;strokeColor=#d6b656;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="users_responses" edge="1" parent="1" source="users" target="survey_responses" style="endArrow=ERone;startArrow=ERzero;strokeColor=#6c8ebf;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="responses_answers" edge="1" parent="1" source="survey_responses" target="survey_answers" style="endArrow=ERone;startArrow=ERzero;strokeColor=#4d89f0;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="questions_answers" edge="1" parent="1" source="questions" target="survey_answers" style="endArrow=ERone;startArrow=ERzero;strokeColor=#4d89f0;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="options_answers" edge="1" parent="1" source="question_options" target="survey_answers" style="endArrow=ERone;startArrow=ERzero;strokeColor=#4d89f0;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

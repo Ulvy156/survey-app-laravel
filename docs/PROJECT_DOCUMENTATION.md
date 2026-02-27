@@ -12,6 +12,17 @@ Survey API is a Laravel 12 backend that powers an Android client. It provides to
 | Creator    | Create/manage surveys, questions, invitations, sharing, closing/reopening, deleting              |
 | Respondent | View eligible surveys, submit responses (must be authenticated)                                  |
 
+## Route Placeholders & Tokens
+
+| Placeholder/Token    | What it represents                                                                 | Example usage                             |
+| -------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| `{survey}`           | Numeric ID of the survey resource; scoped to creator/admin ownership rules         | `/api/surveys/{survey}`                   |
+| `{question}`         | Numeric ID of a survey question belonging to `{survey}`                            | `/api/surveys/{survey}/questions/{question}` |
+| `{share_token}`      | UUID generated for public sharing; identifies a read-only public survey link       | `/api/public/surveys/{share_token}`       |
+| `{invitation_token}` | UUID stored with `survey_invitations`; used to validate invite status and ownership | `/api/public/invite/{invitation_token}`   |
+
+All IDs/tokens uniquely identify the referenced resource. Controllers resolve them via implicit route-model binding (IDs) or custom lookup logic (tokens) before delegating to services, ensuring authorization and validation are consistently enforced.
+
 ## Environment & Configuration
 
 All runtime values are environment driven:
@@ -257,3 +268,88 @@ erDiagram
     survey_answers }o--|| questions : "answers"
     survey_answers }o--|| question_options : " selects "
 ```
+
+### Database Tables
+
+#### users
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | bigint PK | |
+| name | string | |
+| email | string | unique |
+| password | string | hashed |
+| role | enum | admin / creator / respondent |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### surveys
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | bigint PK | |
+| title | string | |
+| description | text | nullable |
+| type | enum | poll / survey |
+| is_active | boolean | default true |
+| is_closed | boolean | manual close flag |
+| share_token | uuid | nullable |
+| is_public | boolean | default false |
+| expires_at | datetime | nullable |
+| available_from_time | time | nullable |
+| available_until_time | time | nullable |
+| created_by | bigint FK | references users.id |
+| deleted_at | datetime | soft delete |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### questions
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | bigint PK | |
+| survey_id | bigint FK | references surveys.id |
+| question_text | string | |
+| type | enum | text / single_choice / multiple_choice |
+| required | boolean | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### question_options
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | bigint PK | |
+| question_id | bigint FK | references questions.id |
+| option_text | string | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### survey_invitations
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | bigint PK | |
+| survey_id | bigint FK | references surveys.id |
+| email | string | invitee email |
+| invitation_token | uuid | unique |
+| status | enum | pending / completed |
+| expires_at | datetime | nullable |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### survey_responses
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | bigint PK | |
+| survey_id | bigint FK | references surveys.id |
+| respondent_id | bigint FK | references users.id |
+| submitted_at | datetime | |
+| created_at | datetime | |
+| updated_at | datetime | |
+
+#### survey_answers
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | bigint PK | |
+| response_id | bigint FK | references survey_responses.id |
+| question_id | bigint FK | references questions.id |
+| answer_text | text | nullable (text questions) |
+| selected_option_id | bigint FK | nullable, references question_options.id |
+| created_at | datetime | |
+| updated_at | datetime | |
