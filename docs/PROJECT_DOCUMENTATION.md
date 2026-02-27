@@ -54,6 +54,47 @@ All protected routes use Sanctum tokens:
 | POST   | `/api/logout`   | Logout (auth required)           |
 | GET    | `/api/me`       | Current user profile             |
 
+### Android Kotlin Auth Example
+
+Use Retrofit (or another HTTP client) to call `/api/login`, then persist the returned token and attach it as a Bearer header for every protected request. The base URL should come from Android build config (e.g., `BuildConfig.API_BASE_URL`) so it mirrors the backend `APP_URL`.
+
+```kotlin
+data class LoginRequest(val email: String, val password: String)
+data class LoginResponse(val success: Boolean, val message: String, val data: LoginPayload)
+data class LoginPayload(val user: UserDto, val token: String)
+
+interface AuthApi {
+    @POST(\"/api/login\")
+    suspend fun login(@Body payload: LoginRequest): LoginResponse
+
+    @GET(\"/api/me\")
+    suspend fun me(@Header(\"Authorization\") bearer: String): UserResponse
+}
+
+class AuthRepository(private val api: AuthApi, private val tokenStore: TokenStore) {
+    suspend fun login(email: String, password: String) {
+        val response = api.login(LoginRequest(email, password))
+        if (!response.success) error(response.message)
+        tokenStore.save(response.data.token)
+    }
+
+    suspend fun currentUser(): UserDto {
+        val token = tokenStore.read() ?: error(\"Missing token\")
+        return api.me(\"Bearer $token\").data.user
+    }
+}
+
+fun buildHttpClient(tokenStore: TokenStore) = OkHttpClient.Builder()
+    .addInterceptor { chain ->
+        val builder = chain.request().newBuilder()
+        tokenStore.read()?.let { builder.header(\"Authorization\", \"Bearer $it\") }
+        chain.proceed(builder.build())
+    }
+    .build()
+```
+
+`TokenStore` can wrap EncryptedSharedPreferences, DataStore, or another secure persistence layer. Logout simply deletes the stored token and invokes `/api/logout` to revoke the active Sanctum token.
+
 ## Surveys – Creator/Admin
 
 | Method | Endpoint                               | Description                                       |
