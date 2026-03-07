@@ -24,8 +24,8 @@ class UpdateSurveyRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
             'type' => ['sometimes', Rule::in(['poll', 'survey'])],
             'is_active' => ['sometimes', 'boolean'],
-            'available_from_time' => ['nullable', 'date_format:H:i'],
-            'available_until_time' => ['nullable', 'date_format:H:i'],
+            'available_from_time' => ['nullable', 'date'],
+            'available_until_time' => ['nullable', 'date'],
         ];
     }
 
@@ -44,8 +44,8 @@ class UpdateSurveyRequest extends FormRequest
             }
 
             if ($from && $until) {
-                $fromTime = Carbon::createFromFormat('H:i', $from);
-                $untilTime = Carbon::createFromFormat('H:i', $until);
+                $fromTime = Carbon::parse($from);
+                $untilTime = Carbon::parse($until);
 
                 if ($fromTime->greaterThanOrEqualTo($untilTime)) {
                     $validator->errors()->add('available_from_time', 'Available from time must be earlier than available until time.');

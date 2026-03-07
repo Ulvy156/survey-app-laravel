@@ -16,12 +16,14 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/surveys', [SurveyController::class, 'index']);
+    Route::get('/surveys/{survey}', [SurveyController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 });
 
 Route::middleware(['auth:sanctum', 'role:creator,admin'])->group(function (): void {
     Route::post('/surveys', [SurveyController::class, 'store']);
+    Route::patch('/surveys/{survey}', [SurveyController::class, 'update']);
     Route::post('/surveys/{survey}/share', [SurveyShareController::class, 'store']);
     Route::post('/surveys/{survey}/invite', [InvitationController::class, 'store']);
     Route::post('/surveys/{survey}/questions', [QuestionController::class, 'store']);

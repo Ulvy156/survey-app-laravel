@@ -26,8 +26,9 @@ class SurveyResource extends JsonResource
             'is_active' => (bool) $this->is_active,
             'is_closed' => (bool) $this->is_closed,
             'created_by' => $this->created_by,
-            'available_from_time' => $this->available_from_time,
-            'available_until_time' => $this->available_until_time,
+            'available_from_time' => optional($this->available_from_time)->toISOString(),
+            'available_until_time' => optional($this->available_until_time)->toISOString(),
+            'questions' => QuestionResource::collection($this->whenLoaded('questions')),
             'created_at' => optional($this->created_at)->toISOString(),
             'updated_at' => optional($this->updated_at)->toISOString(),
         ];

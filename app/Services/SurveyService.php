@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class SurveyService
@@ -44,6 +45,96 @@ class SurveyService
         ];
 
         return $this->survey->newQuery()->create($payload);
+    }
+
+    public function getForUser(Survey $survey, User $user): Survey
+    {
+        $query = $this->survey->newQuery()
+            ->with([
+                'questions' => fn ($questionQuery) => $questionQuery
+                    ->with(['options' => fn ($optionQuery) => $optionQuery->orderBy('id')])
+                    ->orderBy('id'),
+            ]);
+
+        if ($user->role === UserRole::Admin) {
+            return $query->findOrFail($survey->id);
+        }
+
+        if ($user->role === UserRole::Creator) {
+            return $query
+                ->where('created_by', $user->id)
+                ->findOrFail($survey->id);
+        }
+
+        $matchedSurvey = $query
+            ->whereKey($survey->id)
+            ->active()
+            ->where('is_closed', false)
+            ->notExpired(now())
+            ->availableAt(now())
+            ->whereDoesntHave('responses', function (Builder $responses) use ($user): void {
+                $responses->where('respondent_id', $user->id);
+            })
+            ->where(function (Builder $scope) use ($user): void {
+                $email = Str::lower($user->email);
+
+                $scope->where('is_public', true)
+                    ->orWhereHas('invitations', function (Builder $invitation) use ($email): void {
+                        $invitation->where('email', $email)
+                            ->where('status', SurveyInvitationStatus::Pending->value)
+                            ->where(function (Builder $window): void {
+                                $window->whereNull('expires_at')
+                                    ->orWhere('expires_at', '>', now());
+                            });
+                    });
+            })
+            ->first();
+
+        if (! $matchedSurvey) {
+            throw new NotFoundHttpException();
+        }
+
+        return $matchedSurvey;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Survey $survey, array $data, Authenticatable $user): Survey
+    {
+        $this->ensureSurveyManager($user, $survey);
+
+        $payload = [];
+
+        if (Arr::has($data, 'title')) {
+            $payload['title'] = $data['title'];
+        }
+
+        if (Arr::has($data, 'description')) {
+            $payload['description'] = Arr::get($data, 'description');
+        }
+
+        if (Arr::has($data, 'type')) {
+            $payload['type'] = SurveyType::from($data['type']);
+        }
+
+        if (Arr::has($data, 'is_active')) {
+            $payload['is_active'] = (bool) $data['is_active'];
+        }
+
+        if (Arr::has($data, 'available_from_time')) {
+            $payload['available_from_time'] = Arr::get($data, 'available_from_time');
+        }
+
+        if (Arr::has($data, 'available_until_time')) {
+            $payload['available_until_time'] = Arr::get($data, 'available_until_time');
+        }
+
+        if ($payload !== []) {
+            $survey->update($payload);
+        }
+
+        return $survey->refresh();
     }
 
     /**

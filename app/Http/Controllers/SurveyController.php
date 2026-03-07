@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Survey\StoreSurveyRequest;
+use App\Http\Requests\Survey\UpdateSurveyRequest;
 use App\Http\Resources\SurveyListResource;
 use App\Http\Resources\SurveyResource;
 use App\Models\Survey;
@@ -37,6 +38,17 @@ class SurveyController extends Controller
         ]);
     }
 
+    public function show(Request $request, Survey $survey): JsonResponse
+    {
+        $survey = $this->surveyService->getForUser($survey, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Survey retrieved successfully',
+            'data' => new SurveyResource($survey),
+        ]);
+    }
+
     public function store(StoreSurveyRequest $request): JsonResponse
     {
         $survey = $this->surveyService->create($request->validated(), $request->user());
@@ -46,6 +58,17 @@ class SurveyController extends Controller
             'message' => 'Survey created successfully',
             'data' => new SurveyResource($survey),
         ], Response::HTTP_CREATED);
+    }
+
+    public function update(UpdateSurveyRequest $request, Survey $survey): JsonResponse
+    {
+        $survey = $this->surveyService->update($survey, $request->validated(), $request->user());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Survey updated successfully',
+            'data' => new SurveyResource($survey),
+        ]);
     }
 
     public function destroy(Request $request, Survey $survey): JsonResponse

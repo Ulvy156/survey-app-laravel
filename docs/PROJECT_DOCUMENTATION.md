@@ -63,6 +63,7 @@ See `docs/android-auth-example.md` for a full Retrofit/OkHttp snippet (Java) tha
 | Method | Endpoint                               | Description                                       |
 | ------ | -------------------------------------- | ------------------------------------------------- |
 | POST   | `/api/surveys`                         | Create survey (title, type, description, window)  |
+| PATCH  | `/api/surveys/{survey}`                | Update survey fields                              |
 | POST   | `/api/surveys/{survey}/share`          | Toggle public share + optional expiration         |
 | POST   | `/api/surveys/{survey}/invite`         | Send email invitations (multi-email)              |
 | POST   | `/api/surveys/{survey}/questions`      | Add question (text/single/multiple choice)        |
@@ -74,7 +75,8 @@ See `docs/android-auth-example.md` for a full Retrofit/OkHttp snippet (Java) tha
 
 | Method | Endpoint        | Query Params                         | Notes                                                                                                                     |
 | ------ | --------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/api/surveys` | `type`, `status`, `search`, pagination | Behavior depends on role. Respondents only see active, unexpired, time-window eligible surveys they haven’t submitted, and that are public or have pending invitations. Creators see their surveys; admins see all. |
+| GET    | `/api/surveys` | `type`, `status`, `search`, pagination | Behavior depends on role. Respondents only see active, unexpired, availability-window eligible surveys they haven’t submitted, and that are public or have pending invitations. Creators see their surveys; admins see all. |
+| GET    | `/api/surveys/{survey}` | none | Returns a single survey with `questions` and each question's `options`. Access follows the authenticated user's survey visibility rules. |
 
 Response format:
 
@@ -207,8 +209,8 @@ erDiagram
         uuid share_token
         boolean is_public
         datetime expires_at
-        time available_from_time
-        time available_until_time
+        datetime available_from_time
+        datetime available_until_time
         bigint created_by FK
         datetime deleted_at
         datetime created_at
@@ -299,8 +301,8 @@ erDiagram
 | share_token | uuid | nullable |
 | is_public | boolean | default false |
 | expires_at | datetime | nullable |
-| available_from_time | time | nullable |
-| available_until_time | time | nullable |
+| available_from_time | datetime | nullable |
+| available_until_time | datetime | nullable |
 | created_by | bigint FK | references users.id |
 | deleted_at | datetime | soft delete |
 | created_at | datetime | |

@@ -44,8 +44,8 @@ class Survey extends Model
             'is_closed' => 'boolean',
             'is_public' => 'boolean',
             'expires_at' => 'datetime',
-            'available_from_time' => 'string',
-            'available_until_time' => 'string',
+            'available_from_time' => 'datetime',
+            'available_until_time' => 'datetime',
         ];
     }
 
@@ -84,14 +84,12 @@ class Survey extends Model
 
     public function scopeAvailableAt(Builder $query, Carbon $time): Builder
     {
-        $current = $time->format('H:i:s');
-
-        return $query->where(function (Builder $scope) use ($current): void {
+        return $query->where(function (Builder $scope) use ($time): void {
             $scope->whereNull('available_from_time')
                 ->orWhereNull('available_until_time')
-                ->orWhere(function (Builder $window) use ($current): void {
-                    $window->where('available_from_time', '<=', $current)
-                        ->where('available_until_time', '>=', $current);
+                ->orWhere(function (Builder $window) use ($time): void {
+                    $window->where('available_from_time', '<=', $time)
+                        ->where('available_until_time', '>=', $time);
                 });
         });
     }
@@ -113,43 +111,11 @@ class Survey extends Model
         }
 
         if ($this->available_from_time && $this->available_until_time) {
-            $from = $this->timeForToday($this->available_from_time, $now);
-            $until = $this->timeForToday($this->available_until_time, $now);
-
-            if (! $from || ! $until) {
-                return false;
-            }
-
-            if ($now->lt($from) || $now->gt($until)) {
+            if ($now->lt($this->available_from_time) || $now->gt($this->available_until_time)) {
                 return false;
             }
         }
 
         return true;
-    }
-
-    protected function timeForToday(?string $time, Carbon $now): ?Carbon
-    {
-        if (! $time) {
-            return null;
-        }
-
-        $formats = ['H:i:s', 'H:i'];
-
-        foreach ($formats as $format) {
-            try {
-                $parsed = Carbon::createFromFormat($format, $time, $now->timezone);
-
-                return $parsed->setDate(
-                    (int) $now->year,
-                    (int) $now->month,
-                    (int) $now->day
-                );
-            } catch (\Exception) {
-                continue;
-            }
-        }
-
-        return null;
     }
 }

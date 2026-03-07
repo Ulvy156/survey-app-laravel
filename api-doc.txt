@@ -16,6 +16,7 @@ GET    /api/me                              Current authenticated user profile
 General (All Authenticated Users)
 ----------------------------------------------------------------
 GET    /api/surveys                         Paginated surveys (behavior depends on role)
+GET    /api/surveys/{survey}                Get survey detail with questions
         Query params:
             type=poll|survey
             status=active
@@ -34,6 +35,7 @@ POST   /api/surveys/{survey}/submit         Submit answers (requires respondent 
 Creator/Admin Actions
 ----------------------------------------------------------------
 POST   /api/surveys                         Create survey
+PATCH  /api/surveys/{survey}                Update survey details
 POST   /api/surveys/{survey}/share          Enable/disable public sharing
 POST   /api/surveys/{survey}/invite         Send email invitations
 POST   /api/surveys/{survey}/questions      Create question + options

@@ -228,10 +228,10 @@
                 "value": "application/json"
               }
             ],
-            "description": "Create a survey. Requires creator or admin role.\nValidation:\n- title: required|string|max:255\n- description: nullable|string\n- type: required|in:poll,survey\n- is_active: sometimes|boolean\n- available_from_time: nullable|date_format:H:i\n- available_until_time: nullable|date_format:H:i\nAdditional FormRequest checks:\n- available_from_time requires available_until_time\n- available_until_time requires available_from_time\n- available_from_time must be earlier than available_until_time",
+            "description": "Create a survey. Requires creator or admin role.\nValidation:\n- title: required|string|max:255\n- description: nullable|string\n- type: required|in:poll,survey\n- is_active: sometimes|boolean\n- available_from_time: nullable|date\n- available_until_time: nullable|date\nAdditional FormRequest checks:\n- available_from_time requires available_until_time\n- available_until_time requires available_from_time\n- available_from_time must be earlier than available_until_time",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Customer Satisfaction Survey\",\n  \"description\": \"Collect monthly customer feedback.\",\n  \"type\": \"survey\",\n  \"is_active\": true,\n  \"available_from_time\": \"09:00\",\n  \"available_until_time\": \"18:00\"\n}"
+              "raw": "{\n  \"title\": \"Customer Satisfaction Survey\",\n  \"description\": \"Collect monthly customer feedback.\",\n  \"type\": \"survey\",\n  \"is_active\": true,\n  \"available_from_time\": \"2026-03-10 09:00:00\",\n  \"available_until_time\": \"2026-03-10 18:00:00\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/surveys",
