@@ -41,5 +41,6 @@ Route::prefix('public')->group(function (): void {
 
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function (): void {
     Route::get('/surveys/deleted', [AdminSurveyController::class, 'deleted']);
+    Route::get('/surveys/{survey}/analysis', [AdminSurveyController::class, 'analysis']);
     Route::patch('/surveys/{survey}/restore', [AdminSurveyController::class, 'restore']);
 });

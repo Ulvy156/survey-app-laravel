@@ -35,6 +35,17 @@ class AdminSurveyController extends Controller
         ]);
     }
 
+    public function analysis(int $survey): JsonResponse
+    {
+        $analysis = $this->surveyService->getSurveyAnalysis($survey);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Survey analysis retrieved successfully',
+            'data' => $analysis,
+        ]);
+    }
+
     public function restore(int $survey): JsonResponse
     {
         $survey = $this->surveyService->restoreSurvey($survey);

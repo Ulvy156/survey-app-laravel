@@ -1,0 +1,666 @@
+{
+  "info": {
+    "name": "Laravel Survey API",
+    "_postman_id": "9d2f1acb-6af1-4f3f-b41e-3f2d69e4f6a1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "survey_id",
+      "value": "1"
+    },
+    {
+      "key": "share_token",
+      "value": "00000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "invitation_token",
+      "value": "00000000-0000-0000-0000-000000000002"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Register a new user.\nValidation:\n- name: required|string|max:255\n- email: required|email|max:255|unique:users,email\n- password: required|string|min:8\n- role: required|enum(admin, creator, respondent)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Login with email and password.\nValidation:\n- email: required|email\n- password: required|string",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Logout the authenticated user. Requires Sanctum bearer token.",
+            "url": {
+              "raw": "{{base_url}}/api/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Get the authenticated user profile. Requires Sanctum bearer token.",
+            "url": {
+              "raw": "{{base_url}}/api/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Surveys",
+      "item": [
+        {
+          "name": "List Surveys",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "List surveys for the authenticated user. Requires Sanctum bearer token.\nQuery params supported by service:\n- type: poll|survey\n- status: active\n- search: string\n- page: integer\n- per_page: integer",
+            "url": {
+              "raw": "{{base_url}}/api/surveys",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "survey",
+                  "description": "Optional. Allowed: poll, survey",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "Optional. Allowed: active",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "feedback",
+                  "description": "Optional keyword search",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional page number",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "15",
+                  "description": "Optional items per page",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Survey",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Create a survey. Requires creator or admin role.\nValidation:\n- title: required|string|max:255\n- description: nullable|string\n- type: required|in:poll,survey\n- is_active: sometimes|boolean\n- available_from_time: nullable|date_format:H:i\n- available_until_time: nullable|date_format:H:i\nAdditional FormRequest checks:\n- available_from_time requires available_until_time\n- available_until_time requires available_from_time\n- available_from_time must be earlier than available_until_time",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Customer Satisfaction Survey\",\n  \"description\": \"Collect monthly customer feedback.\",\n  \"type\": \"survey\",\n  \"is_active\": true,\n  \"available_from_time\": \"09:00\",\n  \"available_until_time\": \"18:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Survey",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Soft delete a survey. Requires creator or admin role.",
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Close Survey",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Manually close a survey. Requires creator or admin role.",
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/close",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "close"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reopen Survey",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Reopen a manually closed survey. Requires creator or admin role.",
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/reopen",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "reopen"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Share Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Enable or disable public sharing for a survey. Requires creator or admin role.\nValidation:\n- is_public: required|boolean\n- expires_at: nullable|date|after:now",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_public\": true,\n  \"expires_at\": \"2026-12-31T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/share",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "share"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Invitations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Send survey invitations. Requires creator or admin role.\nValidation:\n- emails: required|array|min:1\n- emails.*: required|email\n- expires_at: nullable|date|after:now",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emails\": [\n    \"user1@example.com\",\n    \"user2@example.com\"\n  ],\n  \"expires_at\": \"2026-12-31T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/invite",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "invite"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Create a survey question. Requires creator or admin role.\nValidation:\n- question_text: required|string\n- type: required|enum(text, single_choice, multiple_choice)\n- required: sometimes|boolean\n- options: nullable|array\n- options.*.option_text: required_with:options|string\nAdditional FormRequest checks:\n- text questions cannot have options\n- single_choice and multiple_choice questions must include options",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_text\": \"How satisfied are you with our service?\",\n  \"type\": \"single_choice\",\n  \"required\": true,\n  \"options\": [\n    { \"option_text\": \"Very satisfied\" },\n    { \"option_text\": \"Satisfied\" },\n    { \"option_text\": \"Neutral\" },\n    { \"option_text\": \"Dissatisfied\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/questions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "questions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Survey",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Submit survey answers. Requires respondent role.\nValidation:\n- invitation_token: nullable|uuid\n- answers: required|array|min:1\n- answers.*.question_id: required|integer\n- answers.*.answer_text: nullable|string\n- answers.*.selected_option_id: nullable|integer\n- answers.*.selected_option_ids: nullable|array|min:1\n- answers.*.selected_option_ids.*: integer",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invitation_token\": \"00000000-0000-0000-0000-000000000002\",\n  \"answers\": [\n    {\n      \"question_id\": 1,\n      \"answer_text\": \"The service is excellent.\"\n    },\n    {\n      \"question_id\": 2,\n      \"selected_option_id\": 5\n    },\n    {\n      \"question_id\": 3,\n      \"selected_option_ids\": [8, 9]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "submit"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Get Public Survey",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": "Get public survey metadata by share token.",
+            "url": {
+              "raw": "{{base_url}}/api/public/surveys/{{share_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "surveys",
+                "{{share_token}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Public Invitation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": "Get invitation landing information by invitation token.",
+            "url": {
+              "raw": "{{base_url}}/api/public/invite/{{invitation_token}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "invite",
+                "{{invitation_token}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List Deleted Surveys",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "List soft-deleted surveys. Requires admin role.\nQuery params supported by service:\n- type: poll|survey\n- status: active\n- search: string\n- page: integer\n- per_page: integer",
+            "url": {
+              "raw": "{{base_url}}/api/admin/surveys/deleted",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "surveys",
+                "deleted"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "survey",
+                  "description": "Optional. Allowed: poll, survey",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "Optional. Allowed: active",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "feedback",
+                  "description": "Optional keyword search",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Optional page number",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "15",
+                  "description": "Optional items per page",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Survey Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Get aggregated survey response analysis for dashboard use. Requires admin role.",
+            "url": {
+              "raw": "{{base_url}}/api/admin/surveys/{{survey_id}}/analysis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "surveys",
+                "{{survey_id}}",
+                "analysis"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Restore Survey",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Restore a soft-deleted survey. Requires admin role.",
+            "url": {
+              "raw": "{{base_url}}/api/admin/surveys/{{survey_id}}/restore",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "surveys",
+                "{{survey_id}}",
+                "restore"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

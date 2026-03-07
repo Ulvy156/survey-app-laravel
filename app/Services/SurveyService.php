@@ -2,13 +2,18 @@
 
 namespace App\Services;
 
+use App\Enums\QuestionType;
 use App\Enums\SurveyInvitationStatus;
 use App\Enums\SurveyType;
 use App\Enums\UserRole;
+use App\Models\Question;
+use App\Models\QuestionOption;
 use App\Models\Survey;
+use App\Models\SurveyResponse;
 use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -171,6 +176,74 @@ class SurveyService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function getSurveyAnalysis(int $surveyId): array
+    {
+        $survey = $this->survey->newQuery()
+            ->withTrashed()
+            ->with([
+                'creator:id,name,email',
+                'questions' => fn ($query) => $query
+                    ->with(['options' => fn ($optionQuery) => $optionQuery->orderBy('id')])
+                    ->orderBy('id'),
+                'responses' => fn ($query) => $query
+                    ->with(['respondent:id,name,email', 'answers'])
+                    ->orderBy('submitted_at'),
+            ])
+            ->withCount([
+                'questions',
+                'responses',
+                'invitations',
+                'invitations as completed_invitations_count' => fn ($query) => $query
+                    ->where('status', SurveyInvitationStatus::Completed->value),
+                'invitations as pending_invitations_count' => fn ($query) => $query
+                    ->where('status', SurveyInvitationStatus::Pending->value),
+            ])
+            ->findOrFail($surveyId);
+
+        $responses = $survey->responses->values();
+        $answerBuckets = $this->bucketAnswersByQuestion($responses);
+        $totalResponses = $responses->count();
+
+        return [
+            'survey' => [
+                'id' => $survey->id,
+                'title' => $survey->title,
+                'description' => $survey->description,
+                'type' => $survey->type instanceof SurveyType ? $survey->type->value : (string) $survey->type,
+                'is_active' => (bool) $survey->is_active,
+                'is_closed' => (bool) $survey->is_closed,
+                'is_public' => (bool) $survey->is_public,
+                'created_at' => optional($survey->created_at)->toISOString(),
+                'updated_at' => optional($survey->updated_at)->toISOString(),
+                'deleted_at' => optional($survey->deleted_at)->toISOString(),
+                'creator' => $survey->creator ? [
+                    'id' => $survey->creator->id,
+                    'name' => $survey->creator->name,
+                    'email' => $survey->creator->email,
+                ] : null,
+            ],
+            'summary' => [
+                'total_questions' => (int) $survey->questions_count,
+                'total_responses' => (int) $survey->responses_count,
+                'total_respondents' => $responses->pluck('respondent_id')->unique()->count(),
+                'total_invitations' => (int) $survey->invitations_count,
+                'completed_invitations' => (int) $survey->completed_invitations_count,
+                'pending_invitations' => (int) $survey->pending_invitations_count,
+            ],
+            'questions' => $survey->questions
+                ->map(fn (Question $question): array => $this->buildQuestionAnalysis(
+                    $question,
+                    $answerBuckets[$question->id] ?? [],
+                    $totalResponses
+                ))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $filters
      */
     protected function applyFilters(Builder $query, array $filters): void
@@ -208,5 +281,117 @@ class SurveyService
         if ((int) $survey->created_by !== (int) $user->id) {
             abort(HttpResponse::HTTP_FORBIDDEN, 'You cannot modify this survey.');
         }
+    }
+
+    /**
+     * @param  Collection<int, SurveyResponse>  $responses
+     * @return array<int, array<int, array{answer: \App\Models\SurveyAnswer, response: SurveyResponse}>>
+     */
+    protected function bucketAnswersByQuestion(Collection $responses): array
+    {
+        return $responses->reduce(
+            function (array $carry, SurveyResponse $response): array {
+                foreach ($response->answers as $answer) {
+                    $carry[$answer->question_id] ??= [];
+                    $carry[$answer->question_id][] = [
+                        'answer' => $answer,
+                        'response' => $response,
+                    ];
+                }
+
+                return $carry;
+            },
+            []
+        );
+    }
+
+    /**
+     * @param  array<int, array{answer: \App\Models\SurveyAnswer, response: SurveyResponse}>  $entries
+     * @return array<string, mixed>
+     */
+    protected function buildQuestionAnalysis(Question $question, array $entries, int $totalResponses): array
+    {
+        $answeredResponsesCount = collect($entries)
+            ->pluck('response.id')
+            ->unique()
+            ->count();
+
+        $analysis = [
+            'id' => $question->id,
+            'question_text' => $question->question_text,
+            'type' => $question->type instanceof QuestionType ? $question->type->value : (string) $question->type,
+            'required' => (bool) $question->required,
+            'responses_count' => $answeredResponsesCount,
+            'skipped_count' => max(0, $totalResponses - $answeredResponsesCount),
+            'response_rate' => $this->percent($answeredResponsesCount, $totalResponses),
+        ];
+
+        if ($question->type === QuestionType::Text) {
+            $analysis['text_answers'] = collect($entries)
+                ->filter(fn (array $entry): bool => filled($entry['answer']->answer_text))
+                ->map(function (array $entry): array {
+                    $response = $entry['response'];
+                    $respondent = $response->respondent;
+
+                    return [
+                        'response_id' => $response->id,
+                        'respondent' => $respondent ? [
+                            'id' => $respondent->id,
+                            'name' => $respondent->name,
+                            'email' => $respondent->email,
+                        ] : null,
+                        'answer_text' => $entry['answer']->answer_text,
+                        'submitted_at' => optional($response->submitted_at)->toISOString(),
+                    ];
+                })
+                ->values()
+                ->all();
+
+            return $analysis;
+        }
+
+        $analysis['options'] = $question->options
+            ->map(fn (QuestionOption $option): array => $this->buildOptionAnalysis(
+                $option,
+                $entries,
+                $totalResponses,
+                $answeredResponsesCount
+            ))
+            ->values()
+            ->all();
+
+        return $analysis;
+    }
+
+    /**
+     * @param  array<int, array{answer: \App\Models\SurveyAnswer, response: SurveyResponse}>  $entries
+     * @return array<string, mixed>
+     */
+    protected function buildOptionAnalysis(
+        QuestionOption $option,
+        array $entries,
+        int $totalResponses,
+        int $answeredResponsesCount
+    ): array {
+        $selectionsCount = collect($entries)
+            ->filter(fn (array $entry): bool => (int) $entry['answer']->selected_option_id === (int) $option->id)
+            ->count();
+
+        return [
+            'id' => $option->id,
+            'option_text' => $option->option_text,
+            'selections_count' => $selectionsCount,
+            'selection_rate' => $this->percent($selectionsCount, $totalResponses),
+            'selection_share' => $this->percent($selectionsCount, $answeredResponsesCount),
+        ];
+    }
+
+    protected function percent(int $count, int $total): float
+    {
+        if ($total === 0) {
+            return 0.0;
+        }
+
+        return round(($count / $total) * 100, 2);
     }
 }

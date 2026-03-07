@@ -143,6 +143,7 @@ Submitting still requires authentication (see above).
 | Method | Endpoint                             | Description                   |
 | ------ | ------------------------------------ | ----------------------------- |
 | GET    | `/api/admin/surveys/deleted`         | Paginated soft-deleted list   |
+| GET    | `/api/admin/surveys/{survey}/analysis` | Aggregated response analysis by survey |
 | PATCH  | `/api/admin/surveys/{survey}/restore`| Restore soft-deleted survey   |
 
 Deleted surveys never appear in standard listings or submissions until restored.
