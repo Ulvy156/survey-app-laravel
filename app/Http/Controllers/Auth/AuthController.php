@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\SurveyInvitationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
+use App\Models\SurveyInvitation;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -90,6 +93,26 @@ class AuthController extends Controller
             'success' => true,
             'data' => [
                 'user' => new UserResource($request->user()),
+            ],
+        ]);
+    }
+
+    public function invitedSurveyCount(Request $request): JsonResponse
+    {
+        $email = Str::lower($request->user()->email);
+
+        $baseQuery = SurveyInvitation::query()->whereRaw('LOWER(email) = ?', [$email]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_invited_surveys' => (clone $baseQuery)->count(),
+                'pending_invited_surveys' => (clone $baseQuery)
+                    ->where('status', SurveyInvitationStatus::Pending->value)
+                    ->count(),
+                'completed_invited_surveys' => (clone $baseQuery)
+                    ->where('status', SurveyInvitationStatus::Completed->value)
+                    ->count(),
             ],
         ]);
     }

@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/surveys/{survey}', [SurveyController::class, 'show']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/me/invited-surveys/count', [AuthController::class, 'invitedSurveyCount']);
 });
 
 Route::middleware(['auth:sanctum', 'role:creator,admin'])->group(function (): void {

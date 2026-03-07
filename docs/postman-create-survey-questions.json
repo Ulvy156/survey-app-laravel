@@ -1,0 +1,279 @@
+{
+  "info": {
+    "_postman_id": "8a4b7f62-8a2b-4c81-9af7-c7fd66e1d5b9",
+    "name": "Survey Questions API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for creating survey questions."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "survey_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Create Text Question",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question_text\": \"What do you think about our service?\",\n  \"type\": \"text\",\n  \"required\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/surveys/{{survey_id}}/questions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "surveys",
+            "{{survey_id}}",
+            "questions"
+          ]
+        },
+        "description": "Create a text question for a survey."
+      },
+      "response": [
+        {
+          "name": "Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_text\": \"What do you think about our service?\",\n  \"type\": \"text\",\n  \"required\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/questions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "questions"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Question created successfully.\",\n  \"data\": {\n    \"id\": 1,\n    \"survey_id\": 1,\n    \"question_text\": \"What do you think about our service?\",\n    \"type\": \"text\",\n    \"required\": true,\n    \"options\": []\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Create Single Choice Question",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question_text\": \"How satisfied are you?\",\n  \"type\": \"single_choice\",\n  \"required\": true,\n  \"options\": [\n    {\n      \"option_text\": \"Very satisfied\"\n    },\n    {\n      \"option_text\": \"Satisfied\"\n    },\n    {\n      \"option_text\": \"Not satisfied\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/surveys/{{survey_id}}/questions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "surveys",
+            "{{survey_id}}",
+            "questions"
+          ]
+        },
+        "description": "Create a single choice question for a survey."
+      },
+      "response": [
+        {
+          "name": "Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_text\": \"How satisfied are you?\",\n  \"type\": \"single_choice\",\n  \"required\": true,\n  \"options\": [\n    {\n      \"option_text\": \"Very satisfied\"\n    },\n    {\n      \"option_text\": \"Satisfied\"\n    },\n    {\n      \"option_text\": \"Not satisfied\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/questions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "questions"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Question created successfully.\",\n  \"data\": {\n    \"id\": 2,\n    \"survey_id\": 1,\n    \"question_text\": \"How satisfied are you?\",\n    \"type\": \"single_choice\",\n    \"required\": true,\n    \"options\": [\n      {\n        \"id\": 1,\n        \"question_id\": 2,\n        \"option_text\": \"Very satisfied\"\n      },\n      {\n        \"id\": 2,\n        \"question_id\": 2,\n        \"option_text\": \"Satisfied\"\n      },\n      {\n        \"id\": 3,\n        \"question_id\": 2,\n        \"option_text\": \"Not satisfied\"\n      }\n    ]\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Create Multiple Choice Question",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"question_text\": \"Which features do you use most?\",\n  \"type\": \"multiple_choice\",\n  \"required\": false,\n  \"options\": [\n    {\n      \"option_text\": \"Dashboard\"\n    },\n    {\n      \"option_text\": \"Reports\"\n    },\n    {\n      \"option_text\": \"Notifications\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/surveys/{{survey_id}}/questions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "surveys",
+            "{{survey_id}}",
+            "questions"
+          ]
+        },
+        "description": "Create a multiple choice question for a survey."
+      },
+      "response": [
+        {
+          "name": "Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_text\": \"Which features do you use most?\",\n  \"type\": \"multiple_choice\",\n  \"required\": false,\n  \"options\": [\n    {\n      \"option_text\": \"Dashboard\"\n    },\n    {\n      \"option_text\": \"Reports\"\n    },\n    {\n      \"option_text\": \"Notifications\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/surveys/{{survey_id}}/questions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "surveys",
+                "{{survey_id}}",
+                "questions"
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Question created successfully.\",\n  \"data\": {\n    \"id\": 3,\n    \"survey_id\": 1,\n    \"question_text\": \"Which features do you use most?\",\n    \"type\": \"multiple_choice\",\n    \"required\": false,\n    \"options\": [\n      {\n        \"id\": 4,\n        \"question_id\": 3,\n        \"option_text\": \"Dashboard\"\n      },\n      {\n        \"id\": 5,\n        \"question_id\": 3,\n        \"option_text\": \"Reports\"\n      },\n      {\n        \"id\": 6,\n        \"question_id\": 3,\n        \"option_text\": \"Notifications\"\n      }\n    ]\n  }\n}"
+        }
+      ]
+    }
+  ]
+}

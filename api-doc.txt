@@ -11,6 +11,7 @@ POST   /api/register                        Register new user (name, email, pass
 POST   /api/login                           Issue Sanctum token
 POST   /api/logout                          Revoke current token (auth required)
 GET    /api/me                              Current authenticated user profile
+GET    /api/me/invited-surveys/count        Count invited surveys for current user
 
 ----------------------------------------------------------------
 General (All Authenticated Users)

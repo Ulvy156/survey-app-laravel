@@ -53,6 +53,7 @@ All protected routes use Sanctum tokens:
 | POST   | `/api/login`    | Login, receive Sanctum token     |
 | POST   | `/api/logout`   | Logout (auth required)           |
 | GET    | `/api/me`       | Current user profile             |
+| GET    | `/api/me/invited-surveys/count` | Current user invited survey counts |
 
 ### Android Java Auth Example
 
