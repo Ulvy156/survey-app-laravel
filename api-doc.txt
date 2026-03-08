@@ -47,6 +47,11 @@ DELETE /api/surveys/{survey}                Soft delete survey
 ----------------------------------------------------------------
 Admin-Only Actions
 ----------------------------------------------------------------
+GET    /api/admin/users                     List users
+POST   /api/admin/users                     Create user
+GET    /api/admin/users/{user}              Get user detail
+PATCH  /api/admin/users/{user}              Update user
+DELETE /api/admin/users/{user}              Delete user
 GET    /api/admin/surveys/deleted           List soft-deleted surveys (paginated)
 GET    /api/admin/surveys/{survey}/analysis Survey response analysis for dashboard
 PATCH  /api/admin/surveys/{survey}/restore  Restore soft-deleted survey

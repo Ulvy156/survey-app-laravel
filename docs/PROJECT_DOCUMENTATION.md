@@ -55,6 +55,16 @@ All protected routes use Sanctum tokens:
 | GET    | `/api/me`       | Current user profile             |
 | GET    | `/api/me/invited-surveys/count` | Current user invited survey counts |
 
+## Admin – Users
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/api/admin/users` | List users with optional `search`, `role`, `page`, `per_page` |
+| POST | `/api/admin/users` | Create a user |
+| GET | `/api/admin/users/{user}` | Get a single user |
+| PATCH | `/api/admin/users/{user}` | Update a user |
+| DELETE | `/api/admin/users/{user}` | Delete a user |
+
 ### Android Java Auth Example
 
 See `docs/android-auth-example.md` for a full Retrofit/OkHttp snippet (Java) that authenticates, stores tokens, and attaches the `Authorization: Bearer <token>` header automatically.

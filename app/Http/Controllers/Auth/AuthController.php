@@ -116,4 +116,19 @@ class AuthController extends Controller
             ],
         ]);
     }
+
+    public function invitedSurveys(Request $request): JsonResponse
+    {
+        $email = Str::lower($request->user()->email);
+
+        $invitations = SurveyInvitation::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->with(['survey'])
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $invitations,
+        ]);
+    }
 }
